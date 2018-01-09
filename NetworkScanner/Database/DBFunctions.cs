@@ -1,10 +1,7 @@
-﻿using System;
+﻿using NetworkScanner.NetworkScanning;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Data;
-using System.Data.Common;
-using NetworkScanner.NetworkScanning;
 
 namespace NetworkScanner.Database
 {
@@ -37,7 +34,7 @@ namespace NetworkScanner.Database
                             var lastip = LastIP(result.DeviceGUID);
                             if (result.IP != lastip)
                             {
-                                Console.WriteLine("CHANGE: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
+                                Logging.Log("CHANGE: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
                                 insertedRows++;
                                 string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
                                 var cmd = db.GetCommand(insertQry);
@@ -48,7 +45,7 @@ namespace NetworkScanner.Database
                     if (affectedRows == insertedRows)
                     {
                         trans.Commit();
-                        Console.WriteLine(affectedRows + " entries added.");
+                        Logging.Log(affectedRows + " entries added.");
                         return true;
                     }
                     else
@@ -59,7 +56,7 @@ namespace NetworkScanner.Database
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    Logging.Error(ex.Message);
                     trans.Rollback();
                     return false;
                 }
@@ -122,7 +119,7 @@ namespace NetworkScanner.Database
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Logging.Error(ex.Message);
             }
         }
         /// <summary>
@@ -146,7 +143,7 @@ namespace NetworkScanner.Database
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Logging.Error(ex.Message);
             }
             return tmpList;
         }

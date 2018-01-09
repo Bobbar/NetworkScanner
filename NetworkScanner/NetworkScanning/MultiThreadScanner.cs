@@ -1,10 +1,7 @@
-﻿using System;
+﻿using NetworkScanner.Database;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using NetworkScanner.Database;
 
 namespace NetworkScanner.NetworkScanning
 {
@@ -13,16 +10,21 @@ namespace NetworkScanner.NetworkScanning
         private System.Timers.Timer threadTimer;
         private List<ScanResult> pingResults = new List<ScanResult>();
         private List<string> scanList;
-        private const int defaultScanThreads = 40;
+        private const int defaultScanThreads = 10;
         private int maxThreads = defaultScanThreads;
         private int currentThreads = 0;
-        private int currentHostIdx = 0;
+        private int currentScanIdx = 0;
         private object thislock = new object();
         private long startTime;
 
-        public MultiThreadScanner(int scanThreads = defaultScanThreads)
+        public MultiThreadScanner()
         {
-            if (scanThreads < 1)
+            InitTimer();
+        }
+
+        public void StartScan(int scanThreads = defaultScanThreads)
+        {
+            if (scanThreads > 1)
             {
                 maxThreads = scanThreads;
             }
@@ -31,39 +33,36 @@ namespace NetworkScanner.NetworkScanning
                 maxThreads = defaultScanThreads;
             }
 
-            InitTimer();
-        }
+            Logging.Log("Starting new scan using " + maxThreads + " threads.");
 
-        public void StartScan()
-        {
             startTime = DateTime.Now.Ticks;
             scanList = DBFunctions.Hostnames();
+            Logging.Info(scanList.Count.ToString() + " hostnames will be scanned.");
             threadTimer.Start();
         }
 
         private void InitTimer()
         {
             threadTimer = new System.Timers.Timer();
-            threadTimer.Interval = 100;
+            threadTimer.Interval = 50;
             threadTimer.Enabled = true;
             threadTimer.Elapsed += TimerTick;
         }
 
         private void TimerTick(object sender, EventArgs e)
         {
-            if (currentThreads < maxThreads && currentHostIdx < scanList.Count)
+            if (currentThreads < maxThreads && currentScanIdx < scanList.Count)
             {
-                StartPingThread(scanList[currentHostIdx]);
-                currentHostIdx++;
+                StartPingThread(scanList[currentScanIdx]);
+                currentScanIdx++;
             }
         }
 
-        private void StartPingThread(string ip)
+        private void StartPingThread(string hostname)
         {
 
-            Console.WriteLine(currentHostIdx + " of " + (scanList.Count - 1) + "  Start ping: " + ip);
-
-            Pinger pinger = new Pinger(ip);
+            Logging.Verbose(currentScanIdx + " of " + (scanList.Count - 1) + ": " + hostname);
+            Pinger pinger = new Pinger(hostname);
             Thread t = new Thread(pinger.StartPing);
             pinger.PingComplete += PingComplete;
             t.Start();
@@ -75,17 +74,17 @@ namespace NetworkScanner.NetworkScanning
         {
             var pingEvent = (Pinger.PingerCompleteEventArgs)e;
 
+            var pingResult = pingEvent.Hostname + " - " + pingEvent.PingIP + " - " + pingEvent.Success.ToString();
+            Logging.Verbose("Result: " + pingResult);
+
             if (pingEvent.Success)
             {
-                var pingResult = pingEvent.Hostname + " - " + pingEvent.PingIP + " - " + pingEvent.Success.ToString();
                 var deviceGUID = DBFunctions.DeviceGUID(pingEvent.Hostname);
-
                 if (!string.IsNullOrEmpty(deviceGUID))
                 {
                     pingResults.Add(new ScanResult(deviceGUID, pingEvent.PingIP, pingEvent.Success, pingEvent.Hostname));
                 }
 
-                Console.WriteLine(pingResult);
             }
 
             lock (thislock)
@@ -96,34 +95,34 @@ namespace NetworkScanner.NetworkScanning
             if (ScanComplete())
             {
                 threadTimer.Stop();
-                Console.WriteLine("Scan Complete.  Num of results: " + pingResults.Count.ToString());
-                Console.WriteLine("Inserting changes into database...");
+                Logging.Log("Scan Complete.  Num of results: " + pingResults.Count.ToString());
+                Logging.Log("Inserting changes into database...");
 
                 if (DBFunctions.InsertScanResults(pingResults))
                 {
-                    Console.WriteLine("  Success!");
+                    Logging.Log("  Success!");
                 }
                 else
                 {
-                    Console.WriteLine("  Failed!");
+                    Logging.Log("  Failed!");
                 }
                 var elapTime = (((DateTime.Now.Ticks - startTime) / 10000) / 1000);
-                Console.WriteLine("Runtime: " + elapTime + " s");
+                Logging.Log("Runtime: " + elapTime + " s");
+                Console.WriteLine();
+                Console.WriteLine();
                 Environment.Exit(0);
-
             }
 
         }
 
         private bool ScanComplete()
         {
-            if (currentHostIdx >= (scanList.Count) && currentThreads == 0)
+            if (currentScanIdx >= (scanList.Count) && currentThreads == 0)
             {
                 return true;
             }
             return false;
         }
-
 
     }
 }

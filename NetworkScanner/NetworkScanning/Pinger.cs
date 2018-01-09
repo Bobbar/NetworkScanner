@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net;
 using System.Net.Sockets;
-using System.Net.NetworkInformation;
 
 namespace NetworkScanner.NetworkScanning
 {
@@ -57,7 +54,7 @@ namespace NetworkScanner.NetworkScanning
             }
             catch (Exception ex)
             {
-                Console.WriteLine(hostName + " - " + ex.Message);
+                Logging.Warning(hostName + " - " + ex.Message);
                 success = false;
             }
             OnPingComplete(new PingerCompleteEventArgs(success, hostName, ip));
