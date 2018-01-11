@@ -76,13 +76,19 @@ namespace NetworkScanner.Database
 
         private bool TryOpenConnection(MySqlConnection connection)
         {
+            Logging.Verbose("TryOpenConnection: " + connection.ToString());
             if (ReferenceEquals(connection, null)) //Instantiate new connection.
             {
+                Logging.Verbose("Connection null, getting new..");
+
                 connection = NewConnection();
+                Logging.Verbose("Got new connection.");
             }
             if (connection.State != ConnectionState.Open) //Try to open connection.
             {
+                Logging.Verbose("Connection not open. Opening...");
                 connection.Open();
+                Logging.Verbose("Connection opened.");
             }
             if (connection.State == ConnectionState.Open) //Check if connection is open.
             {
@@ -110,9 +116,15 @@ namespace NetworkScanner.Database
 
         public DbTransaction StartTransaction()
         {
+            Logging.Verbose("Getting new connection...");
             var conn = NewConnection();
+            Logging.Verbose("Got connection.");
+            Logging.Verbose("Opening connection...");
             OpenConnection(conn);
+            Logging.Verbose("Connection opened.");
+            Logging.Verbose("Beginning transaction...");
             var trans = conn.BeginTransaction();
+            Logging.Verbose("Returning transaction...");
             return trans;
         }
 
@@ -136,16 +148,37 @@ namespace NetworkScanner.Database
 
         public DataTable DataTableFromQueryString(string query)
         {
+            Logging.Verbose("DataTableFromQueryString - " + query);
+            Logging.Verbose("Init DataTable...");
             using (DataTable results = new DataTable())
-            using (var da = new MySqlDataAdapter())
-            using (var cmd = new MySqlCommand(query))
-            using (var conn = NewConnection())
             {
-                OpenConnection(conn);
-                cmd.Connection = conn;
-                da.SelectCommand = cmd;
-                da.Fill(results);
-                return results;
+                Logging.Verbose("DataTable Inited.");
+                Logging.Verbose("Init Adapter...");
+                using (var da = new MySqlDataAdapter())
+                {
+                    Logging.Verbose("Adapter inited.");
+                    Logging.Verbose("Init command...");
+                    using (var cmd = new MySqlCommand(query))
+                    {
+                        Logging.Verbose("Command inited.");
+                        Logging.Verbose("Getting new connection...");
+                        using (var conn = NewConnection())
+                        {
+                            Logging.Verbose("Opening connection...");
+                            OpenConnection(conn);
+                            Logging.Verbose("Setting command connection...");
+                            cmd.Connection = conn;
+                            Logging.Verbose("Connection set.");
+                            Logging.Verbose("Setting select command...");
+                            da.SelectCommand = cmd;
+                            Logging.Verbose("Command set.");
+                            Logging.Verbose("Filling results...");
+                            da.Fill(results);
+                            Logging.Verbose("Results filled, returning.");
+                            return results;
+                        }
+                    }
+                }
             }
         }
 

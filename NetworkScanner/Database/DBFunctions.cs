@@ -1,7 +1,8 @@
-﻿using NetworkScanner.NetworkScanning;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Data;
+using NetworkScanner.NetworkScanning;
 
 namespace NetworkScanner.Database
 {
@@ -17,19 +18,24 @@ namespace NetworkScanner.Database
         /// <returns>Number of affected/inserted rows.</returns>
         public static bool InsertScanResults(List<ScanResult> results)
         {
+            Logging.Verbose("Starting DB insert...");
             if (results.Count <= 0) return false;
             int affectedRows = 0;
             int insertedRows = 0;
-
+            Logging.Verbose("Getting database...");
             var db = DBFactory.GetDatabase();
+            Logging.Verbose("Got database.");
+            Logging.Verbose("Starting transaction...");
             using (var trans = db.StartTransaction())
             {
+                Logging.Verbose("Transaction started.");
                 try
                 {
                     foreach (ScanResult result in results)
                     {
                         if (!string.IsNullOrEmpty(result.DeviceGUID))
                         {
+                            //Logging.Verbose("Checking last prev IP.  " + result.Hostname);
                             // Only add a new entry if the IP has changed from the most recent scan.
                             var lastip = LastIP(result.DeviceGUID);
                             if (result.IP != lastip)
@@ -81,6 +87,7 @@ namespace NetworkScanner.Database
             }
             catch (Exception ex)
             {
+                Logging.Error(ex.Message);
                 return string.Empty;
             }
         }
@@ -104,15 +111,20 @@ namespace NetworkScanner.Database
         /// </summary>
         public static void PopulateGUIDCache()
         {
+            Logging.Verbose("Initing GUID Dictionary...");
             deviceGUIDCache = new Dictionary<string, string>();
+            Logging.Verbose("Dictionary initiated.");
             string query = "SELECT dev_UID, dev_hostname FROM devices WHERE dev_hostname IS NOT NULL";
 
             try
             {
+                Logging.Verbose("Getting DB Results...");
                 using (var results = DBFactory.GetDatabase().DataTableFromQueryString(query))
                 {
+                    Logging.Verbose("Iterate rows...");
                     foreach (DataRow row in results.Rows)
                     {
+                        
                         deviceGUIDCache.Add(row["dev_hostname"].ToString(), row["dev_UID"].ToString());
                     }
                 }
@@ -146,6 +158,15 @@ namespace NetworkScanner.Database
                 Logging.Error(ex.Message);
             }
             return tmpList;
+        }
+
+        public static void ReportRun(bool success)
+        {
+            string query = "INSERT INTO script_runs (success) VALUES ('" + Convert.ToInt32(success) + "')";
+
+            DBFactory.GetDatabase().ExecuteQuery(query);
+
+
         }
     }
 

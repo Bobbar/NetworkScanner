@@ -7,10 +7,11 @@ namespace NetworkScanner
     public static class Logging
     {
         public static bool VerboseLog { get; set; } = false;
+        public static bool LoggingEnabled { get; set; } = true;
 
         public static void Log(string message)
         {
-            Console.WriteLine(DateTime.Now.ToString() + ": " + message);
+           if (LoggingEnabled) Console.WriteLine(DateTime.Now.ToString() + ": " + message);
         }
 
         public static void Error(string message)
