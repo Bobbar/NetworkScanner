@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using NetworkScanner.NetworkScanning;
@@ -35,7 +34,6 @@ namespace NetworkScanner.Database
                     {
                         if (!string.IsNullOrEmpty(result.DeviceGUID))
                         {
-                            //Logging.Verbose("Checking last prev IP.  " + result.Hostname);
                             // Only add a new entry if the IP has changed from the most recent scan.
                             var lastip = LastIP(result.DeviceGUID);
                             if (result.IP != lastip)
@@ -124,7 +122,7 @@ namespace NetworkScanner.Database
                     Logging.Verbose("Iterate rows...");
                     foreach (DataRow row in results.Rows)
                     {
-                        
+
                         deviceGUIDCache.Add(row["dev_hostname"].ToString(), row["dev_UID"].ToString());
                     }
                 }

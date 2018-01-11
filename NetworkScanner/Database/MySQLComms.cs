@@ -1,6 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
@@ -102,7 +101,7 @@ namespace NetworkScanner.Database
 
         private string GetConnectString()
         {
-            return MySQLConnectString + "test_db";
+            return MySQLConnectString + "asset_manager";
         }
 
         public MySqlDataAdapter ReturnMySqlAdapter(string sqlQry, MySqlConnection connection)

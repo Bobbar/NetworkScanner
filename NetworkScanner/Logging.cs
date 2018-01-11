@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NetworkScanner
 {
@@ -21,7 +19,7 @@ namespace NetworkScanner
 
         public static void Warning(string message)
         {
-            if (VerboseLog) Log("WARNING: " + message);
+            Log("WARNING: " + message);
         }
 
         public static void Info(string message)
