@@ -16,30 +16,49 @@ namespace NetworkScanner
             if (args.Length == 1)
             {
 
-                if (args[0].ToUpper() == "-V")
+                var logArg = args[0].ToUpper();
+
+                if (logArg == "-V") //Verbose logging
                 {
                     Logging.VerboseLog = true;
+                    Console.WriteLine("Log args: Verbose logs.");
                 }
-
+                else if (logArg == "-D") //Debug logging
+                {
+                    Logging.VerboseLog = true;
+                    Logging.DebugLog = true;
+                    Console.WriteLine("Log args: Debug logs.");
+                }
+                else if (logArg == "-NL") //No Logging.
+                {
+                    Logging.LoggingEnabled = false;
+                    Console.WriteLine("Log args: Log disabled.");
+                }
+                else if (logArg == "-H")
+                {
+                    ShowHelp();
+                }
             }
 
-            Logging.Verbose("Launching scan...");
+            Logging.Debug("Launching scan...");
             SingleThreadScanner.StartScan();
-            Logging.Verbose("Passed scan call...");
+            Logging.Debug("Passed scan call...");
+            Environment.Exit(0);
         }
 
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            Logging.Log("Process Exiting.");
+            Logging.Debug("Process Exiting.");
         }
 
         static void ShowHelp()
         {
-            Console.WriteLine("Usage: [thisdll].dll [arg1] [arg2]");
-            Console.WriteLine("Valid arguments: [#] [logging]");
-            Console.WriteLine("# = Number of scan threads. (Default: 10)");
+            Console.WriteLine("Usage: [thisdll].dll [log args]");
+            Console.WriteLine("Valid arguments:");
             Console.WriteLine("-v = Verbose output. (Default: false)");
-            Console.WriteLine("-nl = Disable logging. (Default: false)");
+            Console.WriteLine("-d = Debug logging. (Default: false)");
+            Console.WriteLine("-nl = Disable all logging. (Default: false)");
+
         }
 
         static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)

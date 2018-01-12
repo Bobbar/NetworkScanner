@@ -6,6 +6,7 @@ namespace NetworkScanner
     {
         public static bool VerboseLog { get; set; } = false;
         public static bool LoggingEnabled { get; set; } = true;
+        public static bool DebugLog { get; set; } = false;
 
         public static void Log(string message)
         {
@@ -19,7 +20,7 @@ namespace NetworkScanner
 
         public static void Warning(string message)
         {
-            Log("WARNING: " + message);
+           if (VerboseLog) Log("WARNING: " + message);
         }
 
         public static void Info(string message)
@@ -30,6 +31,11 @@ namespace NetworkScanner
         public static void Verbose(string message)
         {
             if (VerboseLog) Log(message);
+        }
+
+        public static void Debug(string message)
+        {
+            if (DebugLog) Log(message);
         }
     }
 }

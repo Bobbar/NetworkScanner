@@ -12,46 +12,53 @@ namespace NetworkScanner.NetworkScanning
     {
 
         private static List<ScanResult> pingResults = new List<ScanResult>();
-        private static List<string> scanList;
+        private static List<string> hostsList;
         private static Ping myPing;
         private const int pingTimeOut = 500;
         private static long startTime;
 
-
+        /// <summary>
+        /// Start a new network scan.
+        /// </summary>
         public static void StartScan()
         {
             myPing = new Ping();
             startTime = DateTime.Now.Ticks;
 
-            Logging.Log("");
-            Logging.Log("");
-            Logging.Log("");
+            Console.WriteLine("\n \n");
             Logging.Log("Starting Network Scan.");
-            Logging.Log("Populating GUID Cache...");
+          
+            // Populate the GUID cache dictionary.
             DBFunctions.PopulateGUIDCache();
-            Logging.Log("Done.");
-
+           
             Logging.Log("Getting Hostnames...");
-            scanList = DBFunctions.Hostnames();
+            // Populate the list of hostnames to be pinged.
+            hostsList = DBFunctions.Hostnames();
             Logging.Log("Done.");
 
-            Logging.Info(scanList.Count.ToString() + " hostnames will be scanned.");
-
-            foreach (var host in scanList)
+            Logging.Info(hostsList.Count.ToString() + " hostnames will be scanned.");
+            // Iterate through the list of hostnames.
+            foreach (var host in hostsList)
             {
-                Logging.Log(scanList.IndexOf(host) + " of " + (scanList.Count - 1) + ": " + host);
+                Logging.Verbose((hostsList.IndexOf(host) + 1) + " of " + hostsList.Count + ": " + host);
 
+                // Get the ping reply.
                 var pingReply = PingHost(host);
 
+                // Errors during ping method returns a null, check for that first.
                 if (pingReply != null)
                 {
-                    var pingResult = host + " - " + pingReply.Address.ToString() + " - " + pingReply.Status.ToString();
-                    Logging.Log("Result: " + pingResult);
 
+                    var pingResult = host + " - " + pingReply.Address.ToString() + " - " + pingReply.Status.ToString();
+                    Logging.Verbose("Result: " + pingResult);
+
+                    // Add only successful pings to the reply list.
                     if (pingReply.Status == IPStatus.Success)
                     {
-
+                        // Get the device GUID from the hostname.
                         var deviceGUID = DBFunctions.DeviceGUID(host);
+
+                        // Make sure a GUID was found.
                         if (!string.IsNullOrEmpty(deviceGUID))
                         {
                             pingResults.Add(new ScanResult(deviceGUID, pingReply.Address.ToString(), true, host));
@@ -64,6 +71,7 @@ namespace NetworkScanner.NetworkScanning
             Logging.Log("Scan Complete.  Num of results: " + pingResults.Count.ToString());
             Logging.Log("Inserting changes into database...");
 
+            // Add all the successful results to the DB.
             if (DBFunctions.InsertScanResults(pingResults))
             {
                 Logging.Log("Done!");
@@ -76,10 +84,15 @@ namespace NetworkScanner.NetworkScanning
             }
             var elapTime = (((DateTime.Now.Ticks - startTime) / 10000) / 1000);
             Logging.Log("Runtime: " + elapTime + " s");
-            Environment.Exit(0);
+           
 
         }
 
+        /// <summary>
+        /// Pings a hostname and returns a PingReply. Any errors return null.
+        /// </summary>
+        /// <param name="hostname"></param>
+        /// <returns></returns>
         private static PingReply PingHost(string hostname)
         {
             try

@@ -91,12 +91,20 @@ namespace NetworkScanner.Database
         }
 
         /// <summary>
-        /// Finds the device GUID from hostname.
+        /// Finds the device GUID from hostname using a dictionary cache.
         /// </summary>
         /// <param name="hostname"></param>
         /// <returns></returns>
         public static string DeviceGUID(string hostname)
         {
+            if (deviceGUIDCache == null)
+            {
+                Logging.Debug("Populating GUID Cache...");
+                PopulateGUIDCache();
+                Logging.Debug("Done.");
+            }
+
+
             if (deviceGUIDCache.ContainsKey(hostname))
             {
                 return deviceGUIDCache[hostname];
@@ -109,20 +117,20 @@ namespace NetworkScanner.Database
         /// </summary>
         public static void PopulateGUIDCache()
         {
-            Logging.Verbose("Initing GUID Dictionary...");
+            Logging.Debug("Initing GUID Dictionary...");
             deviceGUIDCache = new Dictionary<string, string>();
-            Logging.Verbose("Dictionary initiated.");
+            Logging.Debug("Dictionary initiated.");
+
             string query = "SELECT dev_UID, dev_hostname FROM devices WHERE dev_hostname IS NOT NULL";
 
             try
             {
-                Logging.Verbose("Getting DB Results...");
+                Logging.Debug("Getting DB Results...");
                 using (var results = DBFactory.GetDatabase().DataTableFromQueryString(query))
                 {
-                    Logging.Verbose("Iterate rows...");
+                    Logging.Debug("Iterate rows...");
                     foreach (DataRow row in results.Rows)
                     {
-
                         deviceGUIDCache.Add(row["dev_hostname"].ToString(), row["dev_UID"].ToString());
                     }
                 }
@@ -132,6 +140,7 @@ namespace NetworkScanner.Database
                 Logging.Error(ex.Message);
             }
         }
+
         /// <summary>
         /// Returns a list of all device hostnames located in the database.
         /// </summary>

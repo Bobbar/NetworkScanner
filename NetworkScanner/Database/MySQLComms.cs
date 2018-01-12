@@ -75,19 +75,19 @@ namespace NetworkScanner.Database
 
         private bool TryOpenConnection(MySqlConnection connection)
         {
-            Logging.Verbose("TryOpenConnection: " + connection.ToString());
+            Logging.Debug("TryOpenConnection: " + connection.ToString());
             if (ReferenceEquals(connection, null)) //Instantiate new connection.
             {
-                Logging.Verbose("Connection null, getting new..");
+                Logging.Debug("Connection null, getting new..");
 
                 connection = NewConnection();
-                Logging.Verbose("Got new connection.");
+                Logging.Debug("Got new connection.");
             }
             if (connection.State != ConnectionState.Open) //Try to open connection.
             {
-                Logging.Verbose("Connection not open. Opening...");
+                Logging.Debug("Connection not open. Opening...");
                 connection.Open();
-                Logging.Verbose("Connection opened.");
+                Logging.Debug("Connection opened.");
             }
             if (connection.State == ConnectionState.Open) //Check if connection is open.
             {
@@ -115,15 +115,15 @@ namespace NetworkScanner.Database
 
         public DbTransaction StartTransaction()
         {
-            Logging.Verbose("Getting new connection...");
+            Logging.Debug("Getting new connection...");
             var conn = NewConnection();
-            Logging.Verbose("Got connection.");
-            Logging.Verbose("Opening connection...");
+            Logging.Debug("Got connection.");
+            Logging.Debug("Opening connection...");
             OpenConnection(conn);
-            Logging.Verbose("Connection opened.");
-            Logging.Verbose("Beginning transaction...");
+            Logging.Debug("Connection opened.");
+            Logging.Debug("Beginning transaction...");
             var trans = conn.BeginTransaction();
-            Logging.Verbose("Returning transaction...");
+            Logging.Debug("Returning transaction...");
             return trans;
         }
 
@@ -147,33 +147,33 @@ namespace NetworkScanner.Database
 
         public DataTable DataTableFromQueryString(string query)
         {
-            Logging.Verbose("DataTableFromQueryString - " + query);
-            Logging.Verbose("Init DataTable...");
+            Logging.Debug("DataTableFromQueryString - " + query);
+            Logging.Debug("Init DataTable...");
             using (DataTable results = new DataTable())
             {
-                Logging.Verbose("DataTable Inited.");
-                Logging.Verbose("Init Adapter...");
+                Logging.Debug("DataTable Inited.");
+                Logging.Debug("Init Adapter...");
                 using (var da = new MySqlDataAdapter())
                 {
-                    Logging.Verbose("Adapter inited.");
-                    Logging.Verbose("Init command...");
+                    Logging.Debug("Adapter inited.");
+                    Logging.Debug("Init command...");
                     using (var cmd = new MySqlCommand(query))
                     {
-                        Logging.Verbose("Command inited.");
-                        Logging.Verbose("Getting new connection...");
+                        Logging.Debug("Command inited.");
+                        Logging.Debug("Getting new connection...");
                         using (var conn = NewConnection())
                         {
-                            Logging.Verbose("Opening connection...");
+                            Logging.Debug("Opening connection...");
                             OpenConnection(conn);
-                            Logging.Verbose("Setting command connection...");
+                            Logging.Debug("Setting command connection...");
                             cmd.Connection = conn;
-                            Logging.Verbose("Connection set.");
-                            Logging.Verbose("Setting select command...");
+                            Logging.Debug("Connection set.");
+                            Logging.Debug("Setting select command...");
                             da.SelectCommand = cmd;
-                            Logging.Verbose("Command set.");
-                            Logging.Verbose("Filling results...");
+                            Logging.Debug("Command set.");
+                            Logging.Debug("Filling results...");
                             da.Fill(results);
-                            Logging.Verbose("Results filled, returning.");
+                            Logging.Debug("Results filled, returning.");
                             return results;
                         }
                     }

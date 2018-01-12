@@ -1,5 +1,8 @@
 ﻿namespace NetworkScanner.NetworkScanning
 {
+    /// <summary>
+    /// Container for holding ping result info to be added to the DB.
+    /// </summary>
     public class ScanResult
     {
 
