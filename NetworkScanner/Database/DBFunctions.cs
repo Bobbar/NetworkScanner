@@ -1,7 +1,7 @@
-﻿using System;
+﻿using NetworkScanner.NetworkScanning;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using NetworkScanner.NetworkScanning;
 
 namespace NetworkScanner.Database
 {
@@ -34,14 +34,24 @@ namespace NetworkScanner.Database
                     {
                         if (!string.IsNullOrEmpty(result.DeviceGUID))
                         {
-                            // Only add a new entry if the IP has changed from the most recent scan.
-                            var lastip = LastIP(result.DeviceGUID);
+                            // Add a new entry if the IP has changed from the most recent scan.
+                            // Or update the timestamp if the IP is the same.
+                            var lastip = PreviousIP(result.DeviceGUID);
                             if (result.IP != lastip)
                             {
                                 Logging.Log("CHANGE: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
                                 insertedRows++;
                                 string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
                                 var cmd = db.GetCommand(insertQry);
+                                affectedRows += db.ExecuteQuery(cmd, trans);
+                            }
+                            else
+                            {
+                                Logging.Log("UPDATE: " + result.DeviceGUID + " - " + result.IP);
+                                insertedRows++;
+                                string topId = TopID(result.DeviceGUID);
+                                string updateQry = "UPDATE device_ping_history SET timestamp = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' WHERE device_guid = '" + result.DeviceGUID + "' AND id = '" + topId + "'";
+                                var cmd = db.GetCommand(updateQry);
                                 affectedRows += db.ExecuteQuery(cmd, trans);
                             }
                         }
@@ -69,19 +79,41 @@ namespace NetworkScanner.Database
         }
 
         /// <summary>
+        /// Returns the max ID of the specified device.
+        /// </summary>
+        /// <param name="deviceGUID"></param>
+        /// <returns></returns>
+        private static string TopID(string deviceGUID)
+        {
+            try
+            {
+                string query = "SELECT id FROM device_ping_history WHERE id = ( SELECT MAX(id) FROM device_ping_history WHERE device_guid = '" + deviceGUID + "')";
+
+                string topId = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
+
+                return topId;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error(ex.Message);
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Returns the IP of the previous most recent scan.
         /// </summary>
         /// <param name="deviceGUID"></param>
         /// <returns></returns>
-        private static string LastIP(string deviceGUID)
+        private static string PreviousIP(string deviceGUID)
         {
             try
             {
                 string query = "SELECT ip FROM device_ping_history WHERE id = ( SELECT MAX(id) FROM device_ping_history WHERE device_guid = '" + deviceGUID + "')";
 
-                string lastip = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
+                string prevIp = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
 
-                return lastip;
+                return prevIp;
             }
             catch (Exception ex)
             {
