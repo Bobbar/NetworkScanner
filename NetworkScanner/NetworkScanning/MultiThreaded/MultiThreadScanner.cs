@@ -13,7 +13,6 @@ namespace NetworkScanner.NetworkScanning
     {
         private static List<ScanResult> pingResults = new List<ScanResult>();
         private static List<string> hostsList;
-        private static List<Thread> threadList = new List<Thread>();
         private static List<Task<List<ScanResult>>> taskList = new List<Task<List<ScanResult>>>();
 
         public static void StartScan(int threads)
