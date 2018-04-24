@@ -1,7 +1,8 @@
 {
   "profiles": {
     "NetworkScanner": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "6"
     }
   }
 }

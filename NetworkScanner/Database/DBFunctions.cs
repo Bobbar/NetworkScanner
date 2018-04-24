@@ -34,24 +34,24 @@ namespace NetworkScanner.Database
                     {
                         if (!string.IsNullOrEmpty(result.DeviceGUID))
                         {
-                            // Add a new entry if the IP has changed from the most recent scan.
-                            // Or update the timestamp if the IP is the same.
-                            var lastip = PreviousIP(result.DeviceGUID);
-                            if (result.IP != lastip)
+                            // Add a new entry if the IP has not been previously recorded,
+                            // or update the timestamp if the IP already exists.
+                            if (HasIP(result.DeviceGUID, result.IP))
                             {
-                                Logging.Log("CHANGE: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
+                                Logging.Log("UPDATE: " + result.DeviceGUID + " - " + result.IP);
                                 insertedRows++;
-                                string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
-                                var cmd = db.GetCommand(insertQry);
+                                string ipId = MostRecentIPIndex(result.DeviceGUID, result.IP);
+                                string updateQry = "UPDATE device_ping_history SET timestamp = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' WHERE device_guid = '" + result.DeviceGUID + "' AND id = '" + ipId + "'";
+                                var cmd = db.GetCommand(updateQry);
                                 affectedRows += db.ExecuteQuery(cmd, trans);
                             }
                             else
                             {
-                                Logging.Log("UPDATE: " + result.DeviceGUID + " - " + result.IP);
+                                var lastip = PreviousIP(result.DeviceGUID);
+                                Logging.Log("ADD: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
                                 insertedRows++;
-                                string topId = TopID(result.DeviceGUID);
-                                string updateQry = "UPDATE device_ping_history SET timestamp = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' WHERE device_guid = '" + result.DeviceGUID + "' AND id = '" + topId + "'";
-                                var cmd = db.GetCommand(updateQry);
+                                string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
+                                var cmd = db.GetCommand(insertQry);
                                 affectedRows += db.ExecuteQuery(cmd, trans);
                             }
                         }
@@ -78,26 +78,34 @@ namespace NetworkScanner.Database
 
         }
 
-        /// <summary>
-        /// Returns the max ID of the specified device.
-        /// </summary>
-        /// <param name="deviceGUID"></param>
-        /// <returns></returns>
-        private static string TopID(string deviceGUID)
+        private static string MostRecentIPIndex(string deviceGUID, string ip)
         {
-            try
-            {
-                string query = "SELECT id FROM device_ping_history WHERE id = ( SELECT MAX(id) FROM device_ping_history WHERE device_guid = '" + deviceGUID + "')";
+            string query = "SELECT id, device_guid, ip FROM device_ping_history WHERE device_guid = '" + deviceGUID + "' AND ip ='" + ip + "' ORDER BY id DESC LIMIT 1";
 
-                string topId = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
+            string id = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
 
-                return topId;
-            }
-            catch (Exception ex)
+            if (!string.IsNullOrEmpty(id))
             {
-                Logging.Error(ex.Message);
-                return string.Empty;
+                return id;
             }
+
+            return string.Empty;
+        }
+
+
+        private static bool HasIP(string deviceGUID, string ip)
+        {
+            string query = "SELECT id, device_guid, ip FROM device_ping_history WHERE device_guid = '" + deviceGUID + "' AND ip ='" + ip + "'";
+
+            using (var results = DBFactory.GetDatabase().DataTableFromQueryString(query))
+            {
+                if (results.Rows.Count > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
