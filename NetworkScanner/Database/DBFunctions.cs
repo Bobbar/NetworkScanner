@@ -207,14 +207,6 @@ namespace NetworkScanner.Database
             return tmpList;
         }
 
-        public static void ReportRun(bool success)
-        {
-            string query = "INSERT INTO script_runs (success) VALUES ('" + Convert.ToInt32(success) + "')";
-
-            DBFactory.GetDatabase().ExecuteQuery(query);
-
-
-        }
     }
 
 }

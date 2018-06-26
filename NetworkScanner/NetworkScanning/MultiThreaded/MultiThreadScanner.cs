@@ -70,12 +70,10 @@ namespace NetworkScanner.NetworkScanning
             if (DBFunctions.InsertScanResults(pingResults))
             {
                 Logging.Log("Done!");
-                DBFunctions.ReportRun(true);
             }
             else
             {
                 Logging.Log("Failed!");
-                DBFunctions.ReportRun(false);
             }
             var elapTime = (((DateTime.Now.Ticks - startTime) / 10000) / 1000);
             Logging.Log("Runtime: " + elapTime + " s");
