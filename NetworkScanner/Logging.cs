@@ -30,7 +30,7 @@ namespace NetworkScanner
 
         public static void Verbose(string message)
         {
-            if (VerboseLog) Log(message);
+            if (VerboseLog || DebugLog) Log(message);
         }
 
         public static void Debug(string message)

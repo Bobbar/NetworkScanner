@@ -49,7 +49,7 @@ namespace NetworkScanner.NetworkScanning
                     }
                 }
             }
-            Logging.Verbose("[" + workerID + "]  ##### DONE. Results: " + pingResults.Count);
+            Logging.Debug("[" + workerID + "]  ##### DONE. Results: " + pingResults.Count);
             return pingResults;
         }
 
@@ -69,7 +69,7 @@ namespace NetworkScanner.NetworkScanning
             }
             catch (Exception ex)
             {
-                Logging.Warning("[" + workerID + "] " + hostname + " - " + ex.Message);
+                Logging.Debug("[" + workerID + "] " + hostname + " - " + ex.Message);
                 return null;
             }
         }

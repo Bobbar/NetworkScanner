@@ -29,7 +29,7 @@ namespace NetworkScanner.NetworkScanning
             hostsList = DBFunctions.Hostnames();
             Logging.Log("Done.");
 
-            Logging.Info(hostsList.Count.ToString() + " hostnames will be scanned.");
+            Logging.Log(hostsList.Count.ToString() + " hostnames will be scanned.");
 
             // Calculate the number of hosts each thread will ping.
             int hostsPerThread = Math.Abs(hostsList.Count / threads);

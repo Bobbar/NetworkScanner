@@ -17,17 +17,17 @@ namespace NetworkScanner.Database
         /// <returns>Number of affected/inserted rows.</returns>
         public static bool InsertScanResults(List<ScanResult> results)
         {
-            Logging.Verbose("Starting DB insert...");
+            Logging.Debug("Starting DB insert...");
             if (results.Count <= 0) return false;
             int affectedRows = 0;
             int insertedRows = 0;
-            Logging.Verbose("Getting database...");
+            Logging.Debug("Getting database...");
             var db = DBFactory.GetDatabase();
-            Logging.Verbose("Got database.");
-            Logging.Verbose("Starting transaction...");
+            Logging.Debug("Got database.");
+            Logging.Debug("Starting transaction...");
             using (var trans = db.StartTransaction())
             {
-                Logging.Verbose("Transaction started.");
+                Logging.Debug("Transaction started.");
                 try
                 {
                     foreach (ScanResult result in results)
@@ -38,7 +38,7 @@ namespace NetworkScanner.Database
                             // or update the timestamp if the IP already exists.
                             if (HasIP(result.DeviceGUID, result.IP))
                             {
-                                Logging.Log("UPDATE: " + result.DeviceGUID + " - " + result.IP);
+                                Logging.Verbose("UPDATE: " + result.DeviceGUID + " - " + result.IP);
                                 insertedRows++;
                                 string ipId = MostRecentIPIndex(result.DeviceGUID, result.IP);
                                 string updateQry = "UPDATE device_ping_history SET timestamp = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' WHERE device_guid = '" + result.DeviceGUID + "' AND id = '" + ipId + "'";
@@ -48,7 +48,7 @@ namespace NetworkScanner.Database
                             else
                             {
                                 var lastip = PreviousIP(result.DeviceGUID);
-                                Logging.Log("ADD: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
+                                Logging.Verbose("ADD: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
                                 insertedRows++;
                                 string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
                                 var cmd = db.GetCommand(insertQry);
@@ -59,7 +59,7 @@ namespace NetworkScanner.Database
                     if (affectedRows == insertedRows)
                     {
                         trans.Commit();
-                        Logging.Log(affectedRows + " entries added.");
+                        Logging.Verbose(affectedRows + " entries added.");
                         return true;
                     }
                     else
