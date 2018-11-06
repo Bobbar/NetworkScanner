@@ -70,7 +70,7 @@ namespace NetworkScanner.Database
                 }
                 catch (Exception ex)
                 {
-                    Logging.Error(ex.Message);
+                    Logging.Error(ex.ToString());
                     trans.Rollback();
                     return false;
                 }
@@ -125,7 +125,7 @@ namespace NetworkScanner.Database
             }
             catch (Exception ex)
             {
-                Logging.Error(ex.Message);
+                Logging.Error(ex.ToString());
                 return string.Empty;
             }
         }
@@ -177,7 +177,7 @@ namespace NetworkScanner.Database
             }
             catch (Exception ex)
             {
-                Logging.Error(ex.Message);
+                Logging.Error(ex.ToString());
             }
         }
 
@@ -202,7 +202,7 @@ namespace NetworkScanner.Database
             }
             catch (Exception ex)
             {
-                Logging.Error(ex.Message);
+                Logging.Error(ex.ToString());
             }
             return tmpList;
         }

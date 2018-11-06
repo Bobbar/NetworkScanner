@@ -69,7 +69,7 @@ namespace NetworkScanner.NetworkScanning
             }
             catch (Exception ex)
             {
-                Logging.Debug("[" + workerID + "] " + hostname + " - " + ex.Message);
+                Logging.Debug("[" + workerID + "] " + hostname + " - " + ex.ToString());
                 return null;
             }
         }
