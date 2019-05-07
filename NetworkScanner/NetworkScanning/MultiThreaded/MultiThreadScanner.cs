@@ -32,10 +32,11 @@ namespace NetworkScanner.NetworkScanning
             Logging.Log(hostsList.Count.ToString() + " hostnames will be scanned.");
 
             // Calculate the number of hosts each thread will ping.
-            int hostsPerThread = Math.Abs(hostsList.Count / threads);
+            int hostsPerThread = hostsList.Count / threads;
+            int mod = hostsList.Count % threads;
 
             // Add any remainders to the count for the last thread.
-            int lastThreadHostCount = hostsPerThread + (hostsList.Count - (hostsPerThread * threads));
+            int lastThreadHostCount = hostsPerThread + mod;
 
             // Split up the hosts list and instantiate ping workers for the first threads (tasks).
             var startIndex = 0;

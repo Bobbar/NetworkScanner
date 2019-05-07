@@ -1,9 +1,9 @@
+using Databases.Data;
 namespace NetworkScanner.Database
 {
     public static class DBFactory
     {
-
-        public static IDataBase GetDatabase()
+        public static IDatabase GetDatabase()
         {
             //if (GlobalSwitches.CachedMode)
             //{
@@ -11,9 +11,8 @@ namespace NetworkScanner.Database
             //}
             //else
             //{
-                return new MySQLDatabase();
+            return new MySqlDatabase("10.10.0.89", "netscanuser", "netscanpassword", "asset_manager");
             //}
         }
-
     }
 }

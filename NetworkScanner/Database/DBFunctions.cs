@@ -42,8 +42,7 @@ namespace NetworkScanner.Database
                                 insertedRows++;
                                 string ipId = MostRecentIPIndex(result.DeviceGUID, result.IP);
                                 string updateQry = "UPDATE device_ping_history SET timestamp = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' WHERE device_guid = '" + result.DeviceGUID + "' AND id = '" + ipId + "'";
-                                var cmd = db.GetCommand(updateQry);
-                                affectedRows += db.ExecuteQuery(cmd, trans);
+                                affectedRows += db.ExecuteNonQuery(updateQry, trans);
                             }
                             else
                             {
@@ -51,8 +50,7 @@ namespace NetworkScanner.Database
                                 Logging.Verbose("ADD: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
                                 insertedRows++;
                                 string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
-                                var cmd = db.GetCommand(insertQry);
-                                affectedRows += db.ExecuteQuery(cmd, trans);
+                                affectedRows += db.ExecuteNonQuery(insertQry, trans);
                             }
                         }
                     }
