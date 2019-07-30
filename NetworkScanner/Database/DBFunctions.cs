@@ -38,18 +38,17 @@ namespace NetworkScanner.Database
                             // or update the timestamp if the IP already exists.
                             if (HasIP(result.DeviceGUID, result.IP))
                             {
-                                Logging.Verbose("UPDATE: " + result.DeviceGUID + " - " + result.IP);
+                                Logging.Verbose($@"UPDATE: { result.DeviceGUID } - { result.IP }");
                                 insertedRows++;
                                 string ipId = MostRecentIPIndex(result.DeviceGUID, result.IP);
-                                string updateQry = "UPDATE device_ping_history SET timestamp = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' WHERE device_guid = '" + result.DeviceGUID + "' AND id = '" + ipId + "'";
+                                string updateQry = $@"UPDATE device_ping_history SET timestamp = '{ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") }' WHERE device_guid = '{ result.DeviceGUID }' AND id = '{ ipId }'";
                                 affectedRows += db.ExecuteNonQuery(updateQry, trans);
                             }
                             else
                             {
-                                var lastip = PreviousIP(result.DeviceGUID);
-                                Logging.Verbose("ADD: " + result.DeviceGUID + " - " + " from: " + lastip + " to: " + result.IP);
+                                Logging.Verbose($@"ADD: { result.DeviceGUID } - to: { result.IP }");
                                 insertedRows++;
-                                string insertQry = "INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('" + result.DeviceGUID + "','" + result.IP + "','" + result.Hostname + "')";
+                                string insertQry = $@"INSERT INTO device_ping_history (device_guid, ip, hostname) VALUES ('{ result.DeviceGUID }','{ result.IP }','{ result.Hostname }')";
                                 affectedRows += db.ExecuteNonQuery(insertQry, trans);
                             }
                         }
@@ -57,7 +56,7 @@ namespace NetworkScanner.Database
                     if (affectedRows == insertedRows)
                     {
                         trans.Commit();
-                        Logging.Verbose(affectedRows + " entries added.");
+                        Logging.Verbose($@"{ affectedRows } entries added.");
                         return true;
                     }
                     else
@@ -78,7 +77,7 @@ namespace NetworkScanner.Database
 
         private static string MostRecentIPIndex(string deviceGUID, string ip)
         {
-            string query = "SELECT id, device_guid, ip FROM device_ping_history WHERE device_guid = '" + deviceGUID + "' AND ip ='" + ip + "' ORDER BY id DESC LIMIT 1";
+            string query = $@"SELECT id, device_guid, ip FROM device_ping_history WHERE device_guid = '{ deviceGUID }' AND ip ='{ ip }' ORDER BY id DESC LIMIT 1";
 
             string id = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
 
@@ -93,7 +92,7 @@ namespace NetworkScanner.Database
 
         private static bool HasIP(string deviceGUID, string ip)
         {
-            string query = "SELECT id, device_guid, ip FROM device_ping_history WHERE device_guid = '" + deviceGUID + "' AND ip ='" + ip + "'";
+            string query = $@"SELECT id, device_guid, ip FROM device_ping_history WHERE device_guid = '{ deviceGUID }' AND ip ='{ ip }'";
 
             using (var results = DBFactory.GetDatabase().DataTableFromQueryString(query))
             {
@@ -115,7 +114,7 @@ namespace NetworkScanner.Database
         {
             try
             {
-                string query = "SELECT ip FROM device_ping_history WHERE id = ( SELECT MAX(id) FROM device_ping_history WHERE device_guid = '" + deviceGUID + "')";
+                string query = $@"SELECT ip FROM device_ping_history WHERE id = ( SELECT MAX(id) FROM device_ping_history WHERE device_guid = '{ deviceGUID }')";
 
                 string prevIp = DBFactory.GetDatabase().ExecuteScalarFromQueryString(query).ToString();
 
