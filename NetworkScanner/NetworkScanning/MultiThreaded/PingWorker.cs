@@ -11,7 +11,7 @@ namespace NetworkScanner.NetworkScanning
         private List<ScanResult> pingResults = new List<ScanResult>();
         private List<string> hostsList;
         private Ping pinger;
-        private const int pingTimeOut = 500;
+        private const int pingTimeOut = 125;//500;
         private int workerID;
 
         public PingWorker(List<string> hosts, int id)

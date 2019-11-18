@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 
 namespace NetworkScanner.Database
 {
@@ -15,7 +16,7 @@ namespace NetworkScanner.Database
         /// </summary>
         /// <param name="results"></param>
         /// <returns>Number of affected/inserted rows.</returns>
-        public static bool InsertScanResults(List<ScanResult> results)
+        public static bool InsertScanResults(List<ScanResult> results, int maxEntriesAllowed)
         {
             Logging.Debug("Starting DB insert...");
             if (results.Count <= 0) return false;
@@ -34,6 +35,9 @@ namespace NetworkScanner.Database
                     {
                         if (!string.IsNullOrEmpty(result.DeviceGUID))
                         {
+                            // Trim # of historical entries.
+                            TrimHistory(result.DeviceGUID, maxEntriesAllowed, trans);
+
                             // Add a new entry if the IP has not been previously recorded,
                             // or update the timestamp if the IP already exists.
                             if (HasIP(result.DeviceGUID, result.IP))
@@ -73,6 +77,41 @@ namespace NetworkScanner.Database
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Trims the number of ping history entries for the specified device.
+        /// </summary>
+        private static void TrimHistory(string deviceGUID, int maxEntries, DbTransaction trans)
+        {
+            if (maxEntries <= 0)
+                return;
+
+            // Select entries ordered by oldest to newest.
+            string query = $@"SELECT * FROM device_ping_history WHERE device_guid = '{deviceGUID}' ORDER BY timestamp";
+
+            using (DbCommand cmd = DBFactory.GetDatabase().GetCommand(query))
+            using (DataTable results = DBFactory.GetDatabase().DataTableFromCommand(cmd, trans))
+            {
+                // Number of rows to remove to fit max count.
+                int removeCount = results.Rows.Count - maxEntries;
+
+                if (removeCount > 0)
+                {
+                    // Delete oldest entries.
+                    for (int i = 0; i < removeCount; i++)
+                    {
+                        results.Rows[i].Delete();
+                    }
+
+                    // Verify results.
+                    int removed = DBFactory.GetDatabase().UpdateTable(query, results, trans);
+                    if (removed != removeCount)
+                        throw new Exception($@"Unexpected number of rows deleted during trim operation.  Expected: {removeCount}  Result: {removed}");
+
+                    Logging.Verbose($@"Removed {removeCount} entries from { results.Rows[0]["hostname"].ToString()}");
+                }
+            }
         }
 
         private static string MostRecentIPIndex(string deviceGUID, string ip)

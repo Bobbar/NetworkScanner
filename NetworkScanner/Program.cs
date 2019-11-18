@@ -1,39 +1,44 @@
 ﻿using System;
 using NetworkScanner.NetworkScanning;
+using CommandLine;
 
 namespace NetworkScanner
 {
     class Program
     {
+        private static int _pingThreads = 1;
+        private static int _maxEntries = -1;
 
-        private static int pingThreads = 1;
+        public class Options
+        {
+            [Option('t', "threads", Default = 1, HelpText = "Scan threads to use.")]
+            public int Threads { get; set; }
+
+            [Option('m', "maxentries", Default = -1, HelpText = "Max historical entries allowed. (Default = Allow all)")]
+            public int MaxEntries { get; set; }
+
+            [Option('l', "loglevel", Default = 1, HelpText = "Logging level. (0=None, 1=Default, 2=Verbose, 3=Debug)")]
+            public int LogLevel { get; set; }
+        }
 
         static void Main(string[] args)
         {
             System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
             System.AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
-            if (args.Length > 0)
-            {
-                foreach (var arg in args)
-                {
-                    var upArg = arg.ToUpper();
-                    int threads;
-                    bool isNum = int.TryParse(upArg, out threads);
+            Parser.Default.ParseArguments<Options>(args).WithParsed(opts => Run(opts));
+        }
 
-                    if (isNum)
-                    {
-                        ParseThreadArg(threads);
-                    }
-                    else
-                    {
-                        ParseLogArg(upArg);
-                    }
-                }
-            }
+        static void Run(Options options)
+        {
+            // Process options.
+            ParseThreadArg(options.Threads);
+            ParseLogArg(options.LogLevel);
+            if (options.MaxEntries > 0)
+                _maxEntries = options.MaxEntries;
 
             Logging.Debug("Launching scan...");
-            MultiThreadScanner.StartScan(pingThreads);
+            MultiThreadScanner.StartScan(_pingThreads, _maxEntries);
             Logging.Debug("Passed scan call...");
 
             Environment.Exit(0);
@@ -41,37 +46,34 @@ namespace NetworkScanner
 
         private static void ParseThreadArg(int threads)
         {
-            if (threads < 1 || threads > 20)
-            {
-                pingThreads = 1;
-            }
+            if (threads > 0 && threads < 20)
+                _pingThreads = threads;
             else
-            {
-                pingThreads = threads;
-            }
+                _pingThreads = 1;
         }
 
-        private static void ParseLogArg(string arg)
+        private static void ParseLogArg(int level)
         {
-            if (arg == "-V") //Verbose logging
+            switch (level)
             {
-                Logging.VerboseLog = true;
-                Console.WriteLine("Log args: Verbose logs.");
-            }
-            else if (arg == "-D") //Debug logging
-            {
-                Logging.VerboseLog = true;
-                Logging.DebugLog = true;
-                Console.WriteLine("Log args: Debug logs.");
-            }
-            else if (arg == "-NL") //No Logging.
-            {
-                Logging.LoggingEnabled = false;
-                Console.WriteLine("Log args: Log disabled.");
-            }
-            else if (arg == "-H")
-            {
-                ShowHelp();
+                case 0:
+                    Logging.LoggingEnabled = false;
+                    break;
+
+                case 1:
+                    Logging.LoggingEnabled = true;
+                    break;
+
+                case 2:
+                    Logging.VerboseLog = true;
+                    Console.WriteLine("Verbose logs enabled.");
+                    break;
+
+                case 3:
+                    Logging.VerboseLog = true;
+                    Logging.DebugLog = true;
+                    Console.WriteLine("Debug logs enabled.");
+                    break;
             }
         }
 
@@ -79,24 +81,11 @@ namespace NetworkScanner
         {
             Logging.Debug("Process Exiting.");
         }
-
-        static void ShowHelp()
-        {
-            Console.WriteLine("Usage: [thisdll].dll [log args] [# threads]");
-            Console.WriteLine("Example (Verbose with 4 threads): [thisdll].dll -v 4");
-            Console.WriteLine("Valid arguments:");
-            Console.WriteLine("-v = Verbose output. (Default: false)");
-            Console.WriteLine("-d = Debug logging. (Default: false)");
-            Console.WriteLine("-nl = Disable all logging. (Default: false)");
-            Console.WriteLine("threads = Number of scan threads to use. (Default: 1 Max: 20)");
-
-        }
-
+     
         static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
         {
             Console.WriteLine(e.ExceptionObject.ToString());
             Environment.Exit(1);
         }
-
     }
 }

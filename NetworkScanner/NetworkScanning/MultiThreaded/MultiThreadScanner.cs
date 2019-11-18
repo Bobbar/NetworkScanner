@@ -15,12 +15,12 @@ namespace NetworkScanner.NetworkScanning
         private static List<string> hostsList;
         private static List<Task<List<ScanResult>>> taskList = new List<Task<List<ScanResult>>>();
 
-        public static void StartScan(int threads)
+        public static void StartScan(int threads, int maxEntriesAllowed)
         {
             var startTime = DateTime.Now.Ticks;
 
             Console.WriteLine("\n \n");
-            Logging.Log("Starting Network Scan. Threads = " + threads);
+            Logging.Log($@"Starting Network Scan. Threads = {threads}  Max Entries = {maxEntriesAllowed}");
 
             // Populate the GUID cache dictionary.
             DBFunctions.PopulateGUIDCache();
@@ -68,7 +68,7 @@ namespace NetworkScanner.NetworkScanning
             Logging.Log("Inserting changes into database...");
 
             // Add all the successful results to the DB.
-            if (DBFunctions.InsertScanResults(pingResults))
+            if (DBFunctions.InsertScanResults(pingResults, maxEntriesAllowed))
             {
                 Logging.Log("Done!");
             }
