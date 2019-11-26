@@ -13,6 +13,8 @@ namespace NetworkScanner.NetworkScanning
         private Ping pinger;
         private const int pingTimeOut = 125;//500;
         private int workerID;
+        private byte[] pingBuffer = Encoding.ASCII.GetBytes("ping");
+        private PingOptions pingOptions = new PingOptions() { DontFragment = true };
 
         public PingWorker(List<string> hosts, int id)
         {
@@ -62,9 +64,6 @@ namespace NetworkScanner.NetworkScanning
         {
             try
             {
-                var pingOptions = new PingOptions();
-                pingOptions.DontFragment = true;
-                byte[] pingBuffer = Encoding.ASCII.GetBytes("ping");
                 return pinger.Send(hostname, pingTimeOut, pingBuffer, pingOptions);
             }
             catch (Exception ex)
