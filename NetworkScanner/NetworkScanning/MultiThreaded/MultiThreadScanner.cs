@@ -19,7 +19,7 @@ namespace NetworkScanner.NetworkScanning
         {
             var startTime = DateTime.Now.Ticks;
 
-            Console.WriteLine("\n \n");
+            Logging.Log("\n \n");
             Logging.Log($@"Starting Network Scan. Threads = {threads}  Max Entries = {maxEntriesAllowed}");
 
             // Populate the GUID cache dictionary.
