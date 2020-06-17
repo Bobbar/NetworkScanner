@@ -11,15 +11,16 @@ namespace NetworkScanner.NetworkScanning
         private List<ScanResult> pingResults = new List<ScanResult>();
         private List<string> hostsList;
         private Ping pinger;
-        private const int pingTimeOut = 125;//500;
+        private int pingTimeOut = 500;
         private int workerID;
         private byte[] pingBuffer = Encoding.ASCII.GetBytes("ping");
         private PingOptions pingOptions = new PingOptions() { DontFragment = true };
 
-        public PingWorker(List<string> hosts, int id)
+        public PingWorker(List<string> hosts, int id, int timeOut)
         {
             workerID = id;
             hostsList = hosts;
+            pingTimeOut = timeOut;
             pinger = new Ping();
         }
 
